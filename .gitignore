@@ -1,0 +1,71 @@
+# Private application materials. The current document contains student IDs,
+# phone numbers and email addresses and must not be pushed to a public remote.
+/南京邮电大学_PD Insight：USB快充协议分析仪_2026年08月31日13时38分26秒.doc
+/docs/private/
+
+# Secrets and local environment
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+
+# Operating-system files
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# Editors and IDE user state
+.idea/
+.vscode/
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+*.uvguix.*
+*.scvd
+
+# Embedded/C/C++ build outputs
+build/
+out/
+Debug/
+Release/
+Objects/
+Listings/
+cmake-build-*/
+CMakeFiles/
+CMakeCache.txt
+compile_commands.json
+*.o
+*.obj
+*.a
+*.lib
+*.elf
+*.axf
+*.hex
+*.bin
+*.map
+*.lst
+*.d
+*.su
+*.dep
+
+# Python helper tools
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+
+# Test and coverage outputs
+.pytest_cache/
+.coverage
+htmlcov/
+coverage/
+
+# Temporary files
+*.tmp
+*.temp
+*.bak
+*.swp
+~$*
