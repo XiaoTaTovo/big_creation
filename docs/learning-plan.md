@@ -152,7 +152,7 @@
 - WCH 官方 CH32H417 示例仓库：https://github.com/openwch/ch32h417
 - LVGL 稳定版本发布页：https://github.com/lvgl/lvgl/releases
 - LVGL 文档：https://docs.lvgl.io/
-- FreeRTOS 文档与学习资源：https://www.freertos.org/Documentation/RTOS_book.html
+- FreeRTOS 文档与免费教材：https://www.freertos.org/Documentation/02-Kernel/07-Books-and-manual/01-RTOS_book
 - Pro Git 简体中文：https://git-scm.com/book/zh/v2
 - Robert C. Seacord, *Effective C, 2nd Edition*, No Starch Press, 2024
 - Elecia White, *Making Embedded Systems, 2nd Edition*, O'Reilly, 2024
