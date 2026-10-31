@@ -1,0 +1,30 @@
+[
+  {
+    "file": "USB Type-C 2.5 Release 202603.zip",
+    "source": "https://www.usb.org/sites/default/files/USB%20Type-C%202.5%20Release%20202603.zip",
+    "download_date": "2026-10-12",
+    "bytes": 29756254,
+    "sha256": "603c2cb0ea356d367fea61f8747a21981f0da9abae4d8ec15556e0063edb81b5"
+  },
+  {
+    "file": "USB_PD_R3.2_V1.2(3).zip",
+    "source": "https://www.usb.org/sites/default/files/USB_PD_R3.2_V1.2%283%29.zip",
+    "download_date": "2026-10-12",
+    "bytes": 45402957,
+    "sha256": "ccdb5b0fcb6af9ed787ba81d1781065772c7d15a816638137327ebbbf16f3bae"
+  },
+  {
+    "file": "TI_SLYY109B_Type-C_PD_Primer.pdf",
+    "source": "https://www.ti.com/lit/pdf/slyy109b",
+    "download_date": "2026-10-12",
+    "bytes": 1379953,
+    "sha256": "9de5fa43fb2f33f1f26db2f1f1578687828905f8f432824b3179d8a04b430bed"
+  },
+  {
+    "file": "TI_ZHCY216_USB_Type-C_Guide_CN.pdf",
+    "source": "https://www.ti.com.cn/cn/lit/eb/zhcy216/zhcy216.pdf",
+    "download_date": "2026-10-12",
+    "bytes": 3605802,
+    "sha256": "02b5d479135096f4975deaf04f50d2ebd89b47f7f42f0756ff9982a457190946"
+  }
+]

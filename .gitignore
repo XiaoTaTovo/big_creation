@@ -69,3 +69,10 @@ coverage/
 *.bak
 *.swp
 ~$*
+
+# Accidental shell-expanded placeholder directory
+%SystemDrive%/
+
+# Archive metadata
+**/__MACOSX/
+._*

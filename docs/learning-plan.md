@@ -157,3 +157,4 @@
 - Robert C. Seacord, *Effective C, 2nd Edition*, No Starch Press, 2024
 - Elecia White, *Making Embedded Systems, 2nd Edition*, O'Reilly, 2024
 - James W. Grenning, *Test-Driven Development for Embedded C*, Pragmatic Bookshelf
+
