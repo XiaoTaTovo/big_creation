@@ -117,3 +117,32 @@
 ## 2026-10-30 双核学习资料核对
 
 新增官方应用手册 docs/references/CH32H417RM.PDF（V1.8）、来源记录及 docs/learning/dual-core-reading.md。核对当前 V3 启动/HSEM0/日志，V5 仍本地回放；识别 V3 旧构建绝对路径和未划共享区两项实验前置问题。定位 IPC/HSEM 官方样例，未改固件或执行硬件实验。手册页码、HSEM 读返回值与本地库差异和学习顺序见阅读路线。
+
+## 2026-11-04 回执：共享采集接口第一阶段
+
+完成外部工程 pd_capture.h 与两核 include，保留 main.c 备份；两核编译链接退出码均为 0。证据、验收及未实现边界统一见 docs/learning/pd-capture-api-stage1.md；CONTEXT/TASKS 已同步。未烧录，等待用户验收。
+
+## 2026-11-06 回执：共享区建立
+
+四份活动文件修改并备份，新增 pd_shared.h。两核构建退出0、NOLOAD 和地址边界核对通过；未烧录，队列未实现。详情及用户验收以 docs/learning/pd-shared-region-stage2.md 为准。
+
+## 2026-11-06 回执：共享队列传输实现
+
+已完成发送、接收确认、字段/完整性检查与诊断页，四份原文件备份。软件15组测试及两核编译链接成功，实际代码路径、日志、SHA256和限制统一记录于docs/learning/pd-transport-stage3.md。无硬件操作，待用户验收。
+
+## 2026-11-06 回执：1022真实样本接入共享回放
+
+- 外部工程 V3 `User/main.c` 已修复：回放调度不再调用 LVGL 的 `lv_tick_get()`；改为 V3 自己的 `Delay_Ms(1)` 累计毫秒节拍，保留 `t8` 毫秒语义。
+- `Common/Common/pd_transport.h` 的八帧样本继续填充真实 Header、PDO/RDO payload、CC、SOP、CRC/长度状态；`timestamp_us=t8_ms*1000`。
+- V3、V5 使用 MRS WCH GCC12 重新构建成功。V3：text 12732/data 284/bss 34860；V5：text 114712/data 17356/bss 111248。V5 保留既有未使用警告。
+- 主机队列测试通过：15组、随机FIFO交错交付89066条；仓库回放回归通过；全量341源文件新鲜编译链接通过，FLASH 132068 B/256 KB、RAM_CODE 114400 B/128 KB、PD_SHARED 32 KB。
+- 产物在外部工程 `build/pd-real-1022-20261106/` 及 `fresh-replay/`。未执行烧录、复位或硬件观察；MRS仍需由用户配套构建并生成最新Merge.bin后手动下载。
+- 当前仍是离线八帧回放验证，不等于实时PD采集；真实接入时将 `PD_CAPTURE_DEMO_MODE` 置0，由队友构造 `PdCaptureRecord` 并调用 `PD_Capture_Submit()`。
+
+## 2026-11-07 开发回执：竖屏摘要与局部更新
+
+已在外部 ST7789_TEST 新增 pd_monitor_model.h / pd_monitor_ui.h / pd_source_config.h，修改两核 main.c（已备份）；恢复竖屏摘要为默认，接入共享队列和最近8条历史，固定字段与变化检测。测试、构建、SHA256及限制见 docs/learning/pd-portrait-monitor.md 和外部 build/portrait-20261107。未执行硬件操作、未提交Git；上板闪烁效果待用户验收。
+
+## 2026-11-07 单次回放与历史辨识修复
+
+回执：完成用户授权的四项修正；外部V3 main/source config/UI/font config已备份后修改。tests/test_pd_monitor_ui.c已扩充。主机与两核构建通过；见docs/learning/pd-portrait-monitor.md最新节和外部build/single-replay-20261107。硬件未操作，待用户验收。

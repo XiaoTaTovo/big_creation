@@ -85,3 +85,31 @@ WCH 全新编译链接 341 个源文件通过；FLASH=131768 B、RAM_CODE=113740
 用户纠正此前“已完成”的理解：尚未创建代码，并授权本对话全部实现。已新增 pc_replay/ 终端工具，提供逐帧/剩余帧回放、重置、坏 Request CRC 注入、结构化事件 CSV 导入/导出、逐帧状态 CSV 导出。run.py 用本机 MinGW 每次构建，直接引用外部实际固件 V5F/User/pd_replay_model.h，无第二套结构体或状态更新实现；build/model-source.json 记录模型来源与 SHA-256，dependencies.txt 记录编译器依赖。字段契约见 pc_replay/fields-v1.md。
 
 9 项端到端测试全部通过，含既有板端模型回归；正常结果 READY/PDO3/12000 mV/1670 mA/8帧/0坏帧，坏 Request CRC 为 HAVE_CAPS/请求未知/8帧/1坏帧。支持中文文件名，拒绝覆盖已有输出文件。运行与验证方法见 pc_replay/README.md，软件证据见 pc_replay/VALIDATION.md。默认八帧来自现有模型；原 1022LISTEN.txt 临时路径已失效，未重新审计原始日志。当前不含原始 TXT 解析、GUI、实时串口、完整 PD 或最终核间线上格式；没有改板端代码，没有新硬件验证。
+
+## 2026-11-04 双核实验与采集接口第一阶段
+
+用户确认 IPC 页面补齐背景不透明度后显示正常，V3→V5 计数实验已运行成功。此次授权完成共享头文件：外部固件 Common/Common/pd_capture.h 已建立，两核 main.c 引用且备份。两核 WCH GCC12 编译链接通过。提交入口仅声明，尚无队列、真实报文传输或解析实现；协议范围不因此扩大。具体改动、证据和验收步骤见 docs/learning/pd-capture-api-stage1.md。本轮未执行硬件操作或重新合并 Merge.bin。
+
+## 2026-11-06 共享区建立
+
+采用官方 HSEM_DataSharing 的 0x20178000/32KB 预留区，两核 NOLOAD 链接区及公共 pd_shared.h 已建立；V3 唤醒 V5 前初始化，V5 只读布局并显示 SHM OK/ERROR。布局 16×48B 记录 +32B 元信息共800B。两核编译链接、地址及启动清零边界核对通过；等待用户配套冷启动验收。队列和真实报文尚未实现。证据与限制见 docs/learning/pd-shared-region-stage2.md。
+
+## 2026-11-06 共享队列发送与接收实现
+
+用户授权实现V3发送、V5接收确认及异常验证。新增pd_transport.h，共享布局升至版本2（912B），16槽SPSC、发布/释放屏障、槽CRC32、接口字段双侧校验、满队列拒绝新记录与诊断统计。V3人工约10条/秒，V5每轮最多4条、页面5Hz，显示RX/s及最大轮询间隔。15组主机测试及两核编译链接通过；未烧录、未更新Merge.bin，等待用户上板。仅冷启动，不支持单核热复位；队列实现不代表真实PD解析已接入。完整证据与验收以docs/learning/pd-transport-stage3.md为准。
+
+## 2026-11-06 1022日志回放校正
+
+用户确认1022LISTEN.txt中的t8单位为毫秒。原V5/User/pd_replay_model.h与pd_replay_ui_impl.h仍保留；IPC模式此前绕过原回放页面。当前1022离线样本已接入共享传输验证源，8帧Header/PDO/RDO字段来自日志，t8转换为timestamp_us=t8_ms*1000并显示原回放仍标记ms。两核构建通过；该样本是离线回放，不等于实时采集。
+
+## 2026-11-06 1022共享回放构建校正
+
+V3回放调度不再依赖V5/LVGL的`lv_tick_get()`，改为V3 `Delay_Ms(1)`累计毫秒节拍；t8按用户确认的毫秒使用，八帧记录仍填充真实样本的Header/PDO/RDO字段。V3、V5重新构建成功：V3 text/data/bss=12732/284/34860，V5=114712/17356/111248；仓库回放回归、15组共享队列测试和341源文件新鲜WCH编译链接均通过。此结果仍是软件验证，未生成或下载Merge.bin，未做硬件观察；下一步由用户在MRS配套构建、生成Merge.bin并手动冷启动验收。`PD_CAPTURE_DEMO_MODE=0`后才进入队友真实采集接口路径。
+
+## 2026-11-07 竖屏摘要接入共享队列
+
+默认 UI_PD_MONITOR=1、UI_DEMO_IPC_COUNTER=0；V3→V5 每条记录送入新解析模型，摘要+最近八帧，固定标签和变化比较，200ms UI 汇总，接收独立。旧独立回放保留；共用 pd_source_config.h 区分离线/采集，日志每轮内部按毫秒时序、末尾停留3秒。未改DMA/10行双缓冲/存储布局。两核全新构建及传输、解析、UI桩测试通过；仅支持普通SOP固定供电协商，非完整PD。等待用户手动配套烧录验收闪烁与排版。详细证据和队友契约见 docs/learning/pd-portrait-monitor.md。
+
+## 2026-11-07 单次回放与历史辨识修复
+
+默认回放已收紧为单次：PD_REPLAY_LOOP=0，八帧后停止制造记录；V5持续接收。底部完整sequence与消息/校验分列，12px字体，最近8条按先后保留。主机验证九条后2～9、无变化150次render零更新、实际V3循环模拟30秒只提交8条；两核编译通过。证据build/single-replay-20261107，用户上板待验收。此记录取代此前默认轮末3秒重播的决定。

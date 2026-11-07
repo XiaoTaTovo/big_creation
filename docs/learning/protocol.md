@@ -109,7 +109,7 @@
 - 日志显示：V3F 负责 USBPD + TIM1，PD LISTEN，CC1，无TX；因此本次设备工作模式是被动监听，不能把日志中的主动协商行为归因于分析仪。
 - 时间线：Source_Capabilities（5 PDO）→ Sink GoodCRC → Sink Request PDO3 → Source GoodCRC → Source Accept → Sink GoodCRC → Source PS_RDY → Sink GoodCRC；基础协商闭环完整。
 - 已按 PD R3.2 V1.2 §6.2.1 表6.2、§6.3.1、§6.3.3、§6.3.6、§6.4.1.1、§6.4.2、§7.9 对 Header/消息顺序解释。
-- 发现待核对项：首行打印 `rev=2`，但 raw Header A1 51（按低字节在前为0x51A1）其Revision字段为01b，和其他 `rev=1` 行的Header Revision字段一致；项目日志 `rev` 字段的显示映射需查解析代码，不能把打印值直接当规范位值。
+- 更正（2026-11-04）：此前误算首帧Header的Revision。0x51A1的bit7..6为10b，即PD 3.x，恰好与日志rev=2一致；后续rev=1帧为01b，即PD 2.0。不应据此怀疑首帧显示错误。
 - RDO 0x33029CA7：对象位置3；Capability Mismatch=0；USB Communications Capable=1；No USB Suspend=1；Operating Current=1670mA；Maximum Operating Current=1670mA；未设置GiveBack。与PDO3 12V/1670mA相符，Power Data Object类型字段为固定供电。
 - PDO1/2/3已核对为5V/3A、9V/2.22A、12V/1.67A；PDO4/5仅确认type=3（APDO），未在本轮展开其子类型与字段。
 - 日志的 `len=OK`、`crc=OK` 是解析器对长度/CRC的状态判断；`raw`看起来含解码后的Header、数据对象和CRC，不包含完整线上前导、SOP和EOP/编码开销，需以项目解析代码最终确认。
@@ -123,3 +123,30 @@
 - 已对真实样本定位：Source_Cap raw共26字节=Header A1 51 + 5×4字节PDO + 4字节CRC 71 75 15 70；请求raw共10字节=Header 42 10 + RDO A7 9C 02 33 + CRC FA FE E1 3A；GoodCRC共6字节=Header 41 00 + CRC BB 6C BB A8。
 - 位运算教学：掩码取字段使用 `(header >> shift) & mask`；组合小端Header使用 `header = byte0 | (byte1 << 8)`；按位或用于拼接不重叠位，按位与用于保留目标位，右移用于把字段移到最低位。
 - 本节以后先不继续扩展异常消息，下一节逐字节拆Source_Cap raw，再逐字段拆PDO1-3，随后拆PDO4-5 APDO；不要求用户脱离表格心算。
+
+
+## 2026-11-04：PDO1 位字段带读
+
+- 用户自行将0x0801912C转为二进制1000000000011001000100101100，数值正确；需左补4个0至32位再按位号定位。
+- 已核对PD R3.2 V1.2 §6.4.1.3.1表6.6第126页、§6.4.1.3.3表6.8第127–128页、§6.4.1.3.13第135–136页。
+- PDO1字段：Type=00；DRP=0、Suspend=0、Unconstrained=1、USBComm=0、DRD=0、Unchunked=0、EPR=0、Reserved=0、Peak=00；电压编码100×50mV=5V；最大电流编码300×10mA=3A。
+- Peak=00不通告该字段内的额外过载档位，不能单凭此位断言完全没有任何峰值能力；Unconstrained不是无限功率；USBComm指USB数据线而非CC上的PD通信。
+- 顺便纠正此前首帧Header Revision计算错误：0x51A1对应10b=3.x，与日志rev=2一致。其余rev=1帧为2.0。raw显示不足以确认Sink是手机还是调测板固件，之前“真实Sink”不应当作消费产品身份结论。
+- 本轮用纯二进制切片和权重相加解释，不要求先掌握按位运算；待用户完成PDO2电压180、电流222的单位换算。
+
+## 2026-11-04：Source_Capabilities 日志字段复习
+
+- 用户正确写出PDO2的单位换算式180×50mV、222×10mA，对应9V/2.22A；仍需澄清USB数据线通信能力与CC上的PD通信。
+- 按用户要求复习真实首帧，重点区分日志元数据(t8/CC1)、包类型(SOP)、Header解析结果(SRC/type/id/ndo/rev及消息名)、检查结果(len/crc)、原始解码字节(raw)与正文对象(PDO)。这些打印标签不是一组逐项排列在raw中的协议字段。
+- raw首2字节A1 51→0x51A1：Extended0、NDO5、ID0、Source、Revision10b=3.x、DFP、Type1；确认此前Revision更正有效。
+- NDO是对象数量，不是后面对象的名称；Source_Capabilities内对象是PDO，Request内对象是RDO。CRC不计入NDO。普通非扩展消息才适用当前2+4*NDO+4的raw长度解释。
+- t8计时单位/时间戳采样点及raw确切定义需解析固件确认；len=OK、crc=OK在此只作为日志报告，不等于本轮独立验证CRC，更不证明实际电压/电流或完整无漏采。
+- 未确认被测Sink物理身份，不能仅凭no TX断言是消费产品而非另一块调测板；仅说明记录程序声明监听、不发送。
+- 本轮等待按元数据/Header/PDO分类作答，不推进新协议主题。
+
+## 2026-11-05：长度不匹配检测练习
+
+- 用户正确区分id/ndo来自Header、PDO2电流来自正文，并判断声明5对象但仅采集4对象且无CRC时不完整；提出编写指出错误的逻辑。
+- 本轮提供独立C教学函数，不修改产品代码：限定raw=2字节Header+普通非扩展对象区+4字节CRC；先检查指针/最短Header，再读取NDO，计算expected=2+4*NDO+4并比较长度；扩展消息明确转交其他解析分支。
+- 模拟输入NDO5、raw_len18时：预期26、实际18、缺8字节，报告截断/长度不足，而非笼统CRC错误。仅凭长度差不能唯一判断哪段字节丢失；“只有4PDO且无CRC”由题设提供，不是长度检查独立证明。
+- 等长仅通过长度检查，仍需CRC与字段合法性验证；尚未运行/编译教学函数，无硬件操作。

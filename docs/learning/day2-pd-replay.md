@@ -37,7 +37,7 @@
 - `CC1 / LISTEN`：原抓包监听 CC1，分析仪没有主动发送报文。
 - `SRC / SNK`：该帧来自供电端 / 用电端，不是 MCU 串口的收发方向。
 - `ID`：原报文的消息 ID；不是本轮报文序号。
-- `t8`：原日志计数值，单位尚未确认，不标成毫秒。
+- `t8`：原日志计数值，单位为毫秒。
 - `PDO 3 / 5`：请求了源端所公布的五个能力对象中的第三个。
 - `REQ V`：根据 Request 选择的固定 PDO 查得的请求电压。
 - `REQ I`：RDO 中的工作电流请求。此抓包最大电流请求也为 1.67 A，已保存在状态中。
@@ -101,3 +101,15 @@ python tools/verify_pd_replay.py `
 ```
 
 原始证据：用户提供的 `1022LISTEN.txt`；协议逐字段说明见同目录 `protocol.md`。Source_Capabilities 日志打印的 revision 与 raw header 存在待核对之处，所以页面暂不展示版本号。
+
+## 2026-11-06：当前双核共享回放校正
+
+上一节描述的是早期的 V5 单核 LVGL 回放页，保留用于学习和回归。当前活动路径已经不同：
+
+- 原来的 `V5F/User/pd_replay_model.h` 与 `pd_replay_ui_impl.h` 仍在，没有删除；它们仍是“结构化事件→状态→LVGL 页面”的旧回放实现。
+- 当前 `UI_DEMO_IPC_COUNTER=1`，V5 页面走 `PD_Transport_Poll()`，显示的是 V3→共享区→V5 的接收诊断页，不直接调用旧回放 UI。
+- 新增的 `Common/Common/pd_transport.h` 中 `PD_Transport_1022Record()` 是八帧真实日志样本的传输验证源：它填入 Header、PDO/RDO payload、CC、SOP、CRC/长度状态，并把 `t8` 毫秒换算为 `timestamp_us`。
+- V3 的离线调度使用本地 `Delay_Ms(1)` 累计毫秒，不依赖 V5 的 LVGL tick。它仍是离线回放，不是实时 PD 采集。
+- 上板前必须由 MRS 配套构建 V3、V5 并生成最新 `Merge.bin`；命令行构建不会自动更新合并文件。
+
+因此，旧回放页和新的共享队列回放是两条可切换的验证路径：旧路径验证显示状态 reducer，新路径验证真实样本字段能否经过 V3→共享区→V5 到达页面。
